@@ -1,28 +1,42 @@
-import { Request, Response } from 'express';
-import Waitlist from '../models/Waitlist';
+import { Request, Response } from "express";
+import Waitlist from "../models/Waitlist";
+import { addContactToPulse } from "../services/sendpulse";
 
 export const joinWaitlist = async (req: Request, res: Response) => {
   try {
     const { fullName, email, location, userType } = req.body;
-    const existingUser = await Waitlist.findOne({ email });
-    if (existingUser) {
-       return res.status(409).json({ message: 'User already exists' });
-    }
-
+    // Create the new entry
     const newEntry = await Waitlist.create({
       fullName,
       email,
       location,
-      userType
+      userType,
     });
+    // Add to SendPulse
+    addContactToPulse(email, fullName, location, userType);
 
-    res.status(201).json({ 
-      message: "Congratulation, you're in! You have successfully joined the waitlist! You'll be the first to know when we launch.", 
-      data: newEntry 
+    // Send success response
+    res.status(201).json({
+      message:
+        "Congratulation, you're in! You have successfully joined the waitlist!",
+      data: newEntry,
     });
+  } catch (error) {
+    const err = error as any;
 
-  } catch (error: any) {
-    console.error('Error joining waitlist:', error);
-    res.status(500).json({ message: 'Server Error', error: error.message });
+    // duplicate key error
+    if (err?.code === 11000) {
+      res.status(409).json({ message: "User already exists" });
+      return;
+    }
+
+    // mongoose validation
+    if (err?.name === "ValidationError") {
+      res.status(400).json({ message: err.message });
+      return;
+    }
+
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
