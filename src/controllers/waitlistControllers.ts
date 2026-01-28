@@ -17,6 +17,7 @@ export const joinWaitlist = async (req: Request, res: Response) => {
 
     // Send success response
     res.status(201).json({
+      success: true,
       message:
         "Congratulation, you're in! You have successfully joined the waitlist!",
       data: newEntry,
