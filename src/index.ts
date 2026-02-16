@@ -8,17 +8,22 @@ dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 8080;
+const allowedOrigins = [
+  "https://bafrikart-waitlist.vercel.app",
+  "http://localhost:3000",
+];
 
 app.use(
   cors({
-    origin: ["https://bafrikart-waitlist.vercel.app", "http://localhost:3000"],
-    methods: ["POST", "GET", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
+app.options("/", cors());
+app.options("/api/waitlist", cors());
 
 app.use(express.json());
+app.use("/api/waitlist", waitlistRoutes);
 
 let isConnected = false;
 
@@ -38,8 +43,6 @@ app.use(async (req, res, next) => {
     next(err);
   }
 });
-
-app.use("/api/waitlist", waitlistRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Bafrikart Server is Running!");
