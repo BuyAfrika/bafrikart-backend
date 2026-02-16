@@ -9,7 +9,16 @@ dotenv.config();
 const app: Express = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://bafrikart-waitlist.vercel.app", "http://localhost:3000"],
+    methods: ["POST", "GET", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
+
+app.options("*", cors());
 app.use(express.json());
 
 let isConnected = false;
